@@ -9,26 +9,45 @@ jobs:
   extract_transform:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-        cache: 'pip'
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
 
-    - name: 'Install dependency requirements'
-      run: pip install -r requirements.txt
+      - name: Install dependency requirements
+        run: pip install -r requirements.txt
 
-    - name: 'Run Extract Transform'
-      run: python main.py
+      - name: Run Extract Transform
+        id: extract_transform
+        run: echo "run-et=$(python main.py)\n" > $GITHUB_OUTPUT
 
-    - name: Get current date and time
-      id: date_time
-      run: echo "::set-output name=datetime::$(date +'%Y-%m-%d_%H-%M-%S')"
+      - name: Get current date and time
+        id: date_time
+        run: echo "::set-output name=datetime::$(date +'%Y-%m-%d_%H-%M-%S')"
 
-    - name: 'Upload a file to Google Drive'
-      uses: willo32/google-drive-upload-action@v1
-      with:
-        target: './result/antananarivo_2020-11-17_to_2023-08-13.csv'
-        name: '${{ steps.date_time.outputs.datetime }}.csv'
-        credentials: ${{ secrets.CREDENTIALS }}
-        parent_folder_id: ${{ secrets.FOLDER_ID }}
+      - name: Upload a file to Google Drive
+        uses: willo32/google-drive-upload-action@v1
+        id: upload_to_drive
+        with:
+          target: result/antananarivo_2020-11-17_to_2023-08-13.csv
+          name: ${{ steps.date_time.outputs.datetime }}.csv
+          credentials: ${{ secrets.CREDENTIALS }}
+          parent_folder_id: ${{ secrets.FOLDER_ID }}
+
+      - name: Send notification email
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          from: ${{ secrets.EMAIL_USERNAME }}
+          to: hei.amour.2@gmail.com
+          subject: |
+            [ ELT - WEATHER ] ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
+          body: |
+            ${{ github.job }} job in worflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}\n
+            ${{ steps.extract_transform.outputs.run-et }}
