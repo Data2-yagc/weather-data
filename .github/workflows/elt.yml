@@ -1,0 +1,29 @@
+name: Run Script
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  extract_transform:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: 'Install dependency requirements'
+      run: pip install -r requirements.txt
+
+    - name: 'Run Extract Transform'
+      run: python main.py
+
+    - name: 'Upload a file to Google Drive'
+      uses: willo32/google-drive-upload-action@v1
+      with:
+        target: './result/antananarivo_2020-11-17_to_2023-08-13.csv'
+        credentials: ${{ secrets.CREDENTIALS }}
+        parent_folder_id: ${{ secrets.FOLDER_ID }}
