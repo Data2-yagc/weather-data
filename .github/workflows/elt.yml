@@ -1,4 +1,4 @@
-name: Run Script
+name: RUN - ELT
 
 on:
   workflow_dispatch:
@@ -20,7 +20,7 @@ jobs:
 
       - name: Run Extract Transform
         id: extract_transform
-        run: echo "run-et=$(python main.py)\n" > $GITHUB_OUTPUT
+        run: echo "run-et=$(python main.py)" > $GITHUB_OUTPUT
 
       - name: Get current date and time
         id: date_time
@@ -45,9 +45,9 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           from: ${{ secrets.EMAIL_USERNAME }}
-          to: hei.amour.2@gmail.com
+          to: hei.amour.2@gmail.com,hei.mahefa@gmail.com,hei.tahiry@gmail.com
           subject: |
             [ ELT - WEATHER ] ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
           body: |
-            ${{ github.job }} job in worflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}\n
+            ${{ github.job }} job in worflow ${{ github.workflow }} of ${{ github.repository }} has ${{ job.status }}.
             ${{ steps.extract_transform.outputs.run-et }}
